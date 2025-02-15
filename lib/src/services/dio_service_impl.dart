@@ -3,26 +3,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import '../error/http_failuar.dart';
 import 'http_service.dart';
-
-class TokenInterceptor extends Interceptor {
-  final Future<String> Function() getToken;
-
-  TokenInterceptor(this.getToken);
-
-  @override
-  Future<void> onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) async {
-    final requireToken =
-        options.extra['requireToken'] ?? false; // Default to false
-    if (requireToken) {
-      final token = await getToken();
-      options.headers['Authorization'] = 'Bearer $token';
-    }
-    handler.next(options);
-  }
-}
+import 'token_interceptor.dart';
 
 class NetworkService implements HttpService {
   final Dio _dio;

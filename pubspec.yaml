@@ -8,7 +8,7 @@ homepage: https://github.com/openclues/network_custom_package
 repository: https://github.com/openclues/network_custom_package
 documentation: https://pub.dev/packages/network_custom_package
 
-version: 1.0.3
+version: 1.0.6
 environment:
   sdk: ">=3.0.0 <4.0.0"
 dependencies:
