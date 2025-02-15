@@ -5,8 +5,6 @@ import '../error/http_failuar.dart';
 abstract class HttpService {
   Future<Either<HttpFailure, T?>> get<T>({
     required String url,
-    bool? toLiveRatesProvider,
-    String? fullUrl,
     required T? Function(dynamic) fromJson,
   });
 

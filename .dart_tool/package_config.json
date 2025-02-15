@@ -14,12 +14,6 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "cores",
-      "rootUri": "../../../cores",
-      "packageUri": "lib/",
-      "languageVersion": "3.5"
-    },
-    {
       "name": "dartz",
       "rootUri": "file:///Users/mymacbook/.pub-cache/hosted/pub.dev/dartz-0.10.1",
       "packageUri": "lib/",
@@ -42,12 +36,6 @@
       "rootUri": "file:///Users/mymacbook/.pub-cache/hosted/pub.dev/equatable-2.0.7",
       "packageUri": "lib/",
       "languageVersion": "2.12"
-    },
-    {
-      "name": "get_it",
-      "rootUri": "file:///Users/mymacbook/.pub-cache/hosted/pub.dev/get_it-8.0.3",
-      "packageUri": "lib/",
-      "languageVersion": "3.0"
     },
     {
       "name": "http_parser",
@@ -104,7 +92,7 @@
       "languageVersion": "3.5"
     }
   ],
-  "generated": "2025-02-15T14:40:36.594318Z",
+  "generated": "2025-02-15T20:26:32.989764Z",
   "generator": "pub",
   "generatorVersion": "3.5.4",
   "flutterRoot": "file:///Users/mymacbook/development/flutter",

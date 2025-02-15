@@ -1,7 +1,6 @@
 name: network
 description: Project network
-version: 0.0.1
-publish_to: none
+version: 1.0.1
 environment:
   sdk: ^3.5.4
 
@@ -9,4 +8,3 @@ dependencies:
   dartz: ^0.10.1
   dio: ^5.8.0+1
   equatable: ^2.0.7
-  get_it: ^8.0.3
