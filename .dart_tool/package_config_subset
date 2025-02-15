@@ -54,7 +54,7 @@ web
 3.4
 file:///Users/mymacbook/.pub-cache/hosted/pub.dev/web-1.1.0/
 file:///Users/mymacbook/.pub-cache/hosted/pub.dev/web-1.1.0/lib/
-network_service
+network_handler_plus
 3.0
 file:///Users/mymacbook/development/packages/network_custom_package/
 file:///Users/mymacbook/development/packages/network_custom_package/lib/
