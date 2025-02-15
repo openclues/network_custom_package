@@ -14,36 +14,13 @@ class TokenInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final requireToken = options.extra['requireToken'] ?? true;
+    final requireToken =
+        options.extra['requireToken'] ?? false; // Default to false
     if (requireToken) {
       final token = await getToken();
       options.headers['Authorization'] = 'Bearer $token';
     }
     handler.next(options);
-  }
-}
-
-class RefreshTokenInterceptor extends Interceptor {
-  final Dio _dio;
-  final Future<String> Function(NetworkService networkService) refreshToken;
-
-  RefreshTokenInterceptor(this.refreshToken, this._dio);
-
-  @override
-  Future<void> onError(DioException err, handler) async {
-    if (err.response?.statusCode == 401) {
-      try {
-        final newToken = await refreshToken(NetworkService(options: _dio));
-        err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
-        return handler.resolve(await Dio().fetch(err.requestOptions));
-      } catch (e) {
-        handler.reject(DioException(
-          requestOptions: err.requestOptions,
-          error: 'Refresh failed: $e',
-        ));
-      }
-    }
-    handler.next(err);
   }
 }
 
@@ -55,13 +32,11 @@ class NetworkService implements HttpService {
   static Dio options({
     required String baseUrl,
     Future<String> Function()? getToken,
-    Future<String> Function(NetworkService networkService)? refreshToken,
   }) {
     final dio = Dio(BaseOptions(baseUrl: baseUrl));
-    dio.interceptors.addAll([
-      if (getToken != null) TokenInterceptor(getToken),
-      if (refreshToken != null) RefreshTokenInterceptor(refreshToken, dio),
-    ]);
+    if (getToken != null) {
+      dio.interceptors.add(TokenInterceptor(getToken));
+    }
     return dio;
   }
 
@@ -69,7 +44,7 @@ class NetworkService implements HttpService {
   Future<Either<HttpFailure, T?>> get<T>({
     required String url,
     required T? Function(dynamic p1) fromJson,
-    bool requireToken = true,
+    bool requireToken = false, // Default to false
     void Function(int received, int total)? onReceiveProgress,
   }) async {
     try {
@@ -87,9 +62,9 @@ class NetworkService implements HttpService {
   @override
   Future<Either<HttpFailure, T?>> post<T>({
     required String url,
-    required T? Function(dynamic p1) fromJson,
+    T? Function(dynamic p1)? fromJson, // Make fromJson optional
     dynamic body,
-    bool requireToken = true,
+    bool requireToken = false,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
@@ -102,7 +77,15 @@ class NetworkService implements HttpService {
         ),
         onSendProgress: onSendProgress,
       );
-      return Right(fromJson(jsonDecode(response.data)));
+
+      // Handle empty responses (e.g., 204 No Content)
+      if (response.statusCode == 204 || response.data == null) {
+        return Right(null);
+      }
+
+      // Parse response if fromJson is provided
+      return Right(
+          fromJson != null ? fromJson(jsonDecode(response.data)) : null);
     } catch (error) {
       return Left(errorFromDioError(error));
     }
@@ -115,7 +98,7 @@ class NetworkService implements HttpService {
     required String fileKey,
     Map<String, dynamic>? formData,
     required T? Function(dynamic p1) fromJson,
-    bool requireToken = true,
+    bool requireToken = false, // Default to false
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
@@ -146,7 +129,7 @@ class NetworkService implements HttpService {
     required String url,
     required T? Function(dynamic p1) fromJson,
     dynamic body,
-    bool requireToken = true,
+    bool requireToken = false, // Default to false
   }) async {
     try {
       final response = await _dio.put(
@@ -165,7 +148,7 @@ class NetworkService implements HttpService {
     required String url,
     required T? Function(dynamic p1) fromJson,
     dynamic body,
-    bool requireToken = true,
+    bool requireToken = false, // Default to false
   }) async {
     try {
       final response = await _dio.patch(
@@ -182,15 +165,22 @@ class NetworkService implements HttpService {
   @override
   Future<Either<HttpFailure, T?>> delete<T>({
     required String url,
-    required T? Function(dynamic p1) fromJson,
-    bool requireToken = true,
+    T? Function(dynamic p1)? fromJson, // Make fromJson optional
+    bool requireToken = false,
   }) async {
     try {
       final response = await _dio.delete(
         url,
         options: Options(extra: {'requireToken': requireToken}),
       );
-      return Right(fromJson(response.data));
+
+      // Handle empty responses (e.g., 204 No Content)
+      if (response.statusCode == 204 || response.data == null) {
+        return Right(null);
+      }
+
+      // Parse response if fromJson is provided
+      return Right(fromJson != null ? fromJson(response.data) : null);
     } catch (error) {
       return Left(errorFromDioError(error));
     }
@@ -202,7 +192,7 @@ class NetworkService implements HttpService {
     required T? Function(dynamic p1) fromJson,
     required String method,
     dynamic body,
-    bool requireToken = true,
+    bool requireToken = false, // Default to false
   }) async {
     try {
       Response response;
