@@ -12,7 +12,7 @@ class NetworkService implements HttpService {
 
   static Dio options({
     required String baseUrl,
-    Future<String> Function()? getToken,
+    Future<String?> Function()? getToken,
   }) {
     final dio = Dio(BaseOptions(baseUrl: baseUrl));
     if (getToken != null) {
