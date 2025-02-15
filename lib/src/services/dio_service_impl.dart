@@ -24,19 +24,23 @@ class TokenInterceptor extends Interceptor {
 }
 
 class RefreshTokenInterceptor extends Interceptor {
-  final Future<String> Function() refreshToken;
+  final Dio _dio;
+  final Future<String> Function(NetworkService networkService) refreshToken;
 
-  RefreshTokenInterceptor(this.refreshToken);
+  RefreshTokenInterceptor(this.refreshToken, this._dio);
 
   @override
-  Future<void> onError(
-      DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(DioException err, handler) async {
     if (err.response?.statusCode == 401) {
-      final requireToken = err.requestOptions.extra['requireToken'] ?? true;
-      if (requireToken) {
-        final newToken = await refreshToken();
+      try {
+        final newToken = await refreshToken(NetworkService(options: _dio));
         err.requestOptions.headers['Authorization'] = 'Bearer $newToken';
         return handler.resolve(await Dio().fetch(err.requestOptions));
+      } catch (e) {
+        handler.reject(DioException(
+          requestOptions: err.requestOptions,
+          error: 'Refresh failed: $e',
+        ));
       }
     }
     handler.next(err);
@@ -51,12 +55,12 @@ class NetworkService implements HttpService {
   static Dio options({
     required String baseUrl,
     Future<String> Function()? getToken,
-    Future<String> Function()? refreshToken,
+    Future<String> Function(NetworkService networkService)? refreshToken,
   }) {
     final dio = Dio(BaseOptions(baseUrl: baseUrl));
     dio.interceptors.addAll([
       if (getToken != null) TokenInterceptor(getToken),
-      if (refreshToken != null) RefreshTokenInterceptor(refreshToken),
+      if (refreshToken != null) RefreshTokenInterceptor(refreshToken, dio),
     ]);
     return dio;
   }
@@ -98,6 +102,39 @@ class NetworkService implements HttpService {
         ),
         onSendProgress: onSendProgress,
       );
+      return Right(fromJson(jsonDecode(response.data)));
+    } catch (error) {
+      return Left(errorFromDioError(error));
+    }
+  }
+
+  @override
+  Future<Either<HttpFailure, T?>> upload<T>({
+    required String url,
+    required String filePath,
+    required String fileKey,
+    Map<String, dynamic>? formData,
+    required T? Function(dynamic p1) fromJson,
+    bool requireToken = true,
+    void Function(int sent, int total)? onSendProgress,
+  }) async {
+    try {
+      final file = await MultipartFile.fromFile(filePath);
+      final data = FormData.fromMap({
+        ...?formData,
+        fileKey: file,
+      });
+
+      final response = await _dio.post(
+        url,
+        data: data,
+        options: Options(
+          extra: {'requireToken': requireToken},
+          headers: {'Content-Type': 'multipart/form-data'},
+        ),
+        onSendProgress: onSendProgress,
+      );
+
       return Right(fromJson(jsonDecode(response.data)));
     } catch (error) {
       return Left(errorFromDioError(error));

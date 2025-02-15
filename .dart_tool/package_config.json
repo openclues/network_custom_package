@@ -86,13 +86,13 @@
       "languageVersion": "3.4"
     },
     {
-      "name": "network",
+      "name": "network_handler_plus",
       "rootUri": "../",
       "packageUri": "lib/",
-      "languageVersion": "3.5"
+      "languageVersion": "3.0"
     }
   ],
-  "generated": "2025-02-15T20:26:32.989764Z",
+  "generated": "2025-02-15T20:41:20.144875Z",
   "generator": "pub",
   "generatorVersion": "3.5.4",
   "flutterRoot": "file:///Users/mymacbook/development/flutter",

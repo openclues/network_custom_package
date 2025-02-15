@@ -1,10 +1,30 @@
-name: network
-description: Project network
+name: network_handler_plus
+description:
+  A comprehensive Dio-based networking package featuring token refresh,
+  request retries, and typed response handling. Provides clean abstraction
+  for REST API interactions with built-in error parsing and Either pattern
+  error handling using dartz.
+homepage: https://github.com/openclues/network_custom_package
+repository: https://github.com/openclues/network_custom_package
+documentation: https://pub.dev/packages/network_custom_package
+
 version: 1.0.1
 environment:
-  sdk: ^3.5.4
-
+  sdk: ">=3.0.0 <4.0.0"
 dependencies:
   dartz: ^0.10.1
   dio: ^5.8.0+1
   equatable: ^2.0.7
+
+topics:
+  - dio
+  - networking
+  - rest-api
+  - http-client
+  - token-authentication
+  - error-handling
+  - retry
+  - refresh-token
+  - dartz
+  - either
+  - network-handler
