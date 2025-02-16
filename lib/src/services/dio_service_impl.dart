@@ -38,7 +38,7 @@ class NetworkService implements HttpService {
   Future<Either<HttpFailure, T?>> get<T>({
     required String url,
     required T? Function(dynamic p1) fromJson,
-    bool requireToken = false, // Default to false
+    bool requireToken = false,
     void Function(int received, int total)? onReceiveProgress,
   }) async {
     try {
@@ -92,7 +92,7 @@ class NetworkService implements HttpService {
     required String fileKey,
     Map<String, dynamic>? formData,
     required T? Function(dynamic p1) fromJson,
-    bool requireToken = false, // Default to false
+    required bool requireToken,
     void Function(int sent, int total)? onSendProgress,
   }) async {
     try {
@@ -225,10 +225,11 @@ HttpFailure errorFromDioError(dynamic error) {
   if (error is DioException) {
     final statusCode = error.response?.statusCode;
     final message = error.message ?? 'Something went wrong';
+    final responseData = error.response?.data;
 
     if (statusCode != null) {
       return ServerHttpFailure(
-        error.response.toString(),
+        responseData?.toString() ?? message,
         code: statusCode,
         statusCode: statusCode,
       );
