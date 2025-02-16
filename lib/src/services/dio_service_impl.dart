@@ -18,6 +18,19 @@ class NetworkService implements HttpService {
     if (getToken != null) {
       dio.interceptors.add(TokenInterceptor(getToken));
     }
+    dio.interceptors.add(InterceptorsWrapper(
+      onRequest: (options, handler) {
+        print('Request URL: ${options.uri}');
+        print('Request Headers: ${options.headers}');
+        print('Request Body: ${options.data}');
+        return handler.next(options);
+      },
+      onError: (DioException error, handler) {
+        print('Error: ${error.message}');
+        print('Response: ${error.response?.data}');
+        return handler.next(error);
+      },
+    ));
     return dio;
   }
 
