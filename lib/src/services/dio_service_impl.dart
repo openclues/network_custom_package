@@ -1,12 +1,21 @@
 import 'dart:convert';
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
+import 'package:logging/logging.dart';
 import '../error/http_failuar.dart';
 import 'http_service.dart';
 import 'token_interceptor.dart';
 
+void setupLogging() {
+  Logger.root.level = Level.ALL;
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
+}
+
 class NetworkService implements HttpService {
   final Dio _dio;
+  final Logger _logger = Logger('NetworkService'); // Logger instance
 
   NetworkService({required Dio options}) : _dio = options;
 
@@ -20,14 +29,14 @@ class NetworkService implements HttpService {
     }
     dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) {
-        print('Request URL: ${options.uri}');
-        print('Request Headers: ${options.headers}');
-        print('Request Body: ${options.data}');
+        Logger('NetworkService').info('Request URL: ${options.uri}');
+        Logger('NetworkService').info('Request Headers: ${options.headers}');
+        Logger('NetworkService').info('Request Body: ${options.data}');
         return handler.next(options);
       },
       onError: (DioException error, handler) {
-        print('Error: ${error.message}');
-        print('Response: ${error.response?.data}');
+        Logger('NetworkService').severe('Error: ${error.message}');
+        Logger('NetworkService').severe('Response: ${error.response?.data}');
         return handler.next(error);
       },
     ));
@@ -47,8 +56,10 @@ class NetworkService implements HttpService {
         options: Options(extra: {'requireToken': requireToken}),
         onReceiveProgress: onReceiveProgress,
       );
+      _logger.info('GET Response: ${response.data}');
       return Right(fromJson(response.data));
     } catch (error) {
+      _logger.severe('GET Error: $error');
       return Left(errorFromDioError(error));
     }
   }
@@ -56,7 +67,7 @@ class NetworkService implements HttpService {
   @override
   Future<Either<HttpFailure, T?>> post<T>({
     required String url,
-    T? Function(dynamic p1)? fromJson, // Make fromJson optional
+    T? Function(dynamic p1)? fromJson,
     dynamic body,
     bool requireToken = false,
     void Function(int sent, int total)? onSendProgress,
@@ -74,13 +85,16 @@ class NetworkService implements HttpService {
 
       // Handle empty responses (e.g., 204 No Content)
       if (response.statusCode == 204 || response.data == null) {
+        _logger.info('POST Response: Empty (204 No Content)');
         return Right(null);
       }
 
       // Parse response if fromJson is provided
+      _logger.info('POST Response: ${response.data}');
       return Right(
           fromJson != null ? fromJson(jsonDecode(response.data)) : null);
     } catch (error) {
+      _logger.severe('POST Error: $error');
       return Left(errorFromDioError(error));
     }
   }
@@ -112,8 +126,10 @@ class NetworkService implements HttpService {
         onSendProgress: onSendProgress,
       );
 
+      _logger.info('Upload Response: ${response.data}');
       return Right(fromJson(jsonDecode(response.data)));
     } catch (error) {
+      _logger.severe('Upload Error: $error');
       return Left(errorFromDioError(error));
     }
   }
@@ -123,7 +139,7 @@ class NetworkService implements HttpService {
     required String url,
     required T? Function(dynamic p1) fromJson,
     dynamic body,
-    bool requireToken = false, // Default to false
+    bool requireToken = false,
   }) async {
     try {
       final response = await _dio.put(
@@ -131,8 +147,10 @@ class NetworkService implements HttpService {
         data: body,
         options: Options(extra: {'requireToken': requireToken}),
       );
+      _logger.info('PUT Response: ${response.data}');
       return Right(fromJson(response.data));
     } catch (error) {
+      _logger.severe('PUT Error: $error');
       return Left(errorFromDioError(error));
     }
   }
@@ -142,7 +160,7 @@ class NetworkService implements HttpService {
     required String url,
     required T? Function(dynamic p1) fromJson,
     dynamic body,
-    bool requireToken = false, // Default to false
+    bool requireToken = false,
   }) async {
     try {
       final response = await _dio.patch(
@@ -150,8 +168,10 @@ class NetworkService implements HttpService {
         data: body,
         options: Options(extra: {'requireToken': requireToken}),
       );
+      _logger.info('PATCH Response: ${response.data}');
       return Right(fromJson(response.data));
     } catch (error) {
+      _logger.severe('PATCH Error: $error');
       return Left(errorFromDioError(error));
     }
   }
@@ -159,7 +179,7 @@ class NetworkService implements HttpService {
   @override
   Future<Either<HttpFailure, T?>> delete<T>({
     required String url,
-    T? Function(dynamic p1)? fromJson, // Make fromJson optional
+    T? Function(dynamic p1)? fromJson,
     bool requireToken = false,
   }) async {
     try {
@@ -170,12 +190,15 @@ class NetworkService implements HttpService {
 
       // Handle empty responses (e.g., 204 No Content)
       if (response.statusCode == 204 || response.data == null) {
+        _logger.info('DELETE Response: Empty (204 No Content)');
         return Right(null);
       }
 
       // Parse response if fromJson is provided
+      _logger.info('DELETE Response: ${response.data}');
       return Right(fromJson != null ? fromJson(response.data) : null);
     } catch (error) {
+      _logger.severe('DELETE Error: $error');
       return Left(errorFromDioError(error));
     }
   }
@@ -186,7 +209,7 @@ class NetworkService implements HttpService {
     required T? Function(dynamic p1) fromJson,
     required String method,
     dynamic body,
-    bool requireToken = false, // Default to false
+    bool requireToken = false,
   }) async {
     try {
       Response response;
@@ -212,10 +235,13 @@ class NetworkService implements HttpService {
           response = await _dio.patch(url, data: body, options: options);
           break;
         default:
+          _logger.severe('Unsupported HTTP method: $method');
           return Left(InternalAppHttpFailure('Method not supported'));
       }
+      _logger.info('$method Response: ${response.data}');
       return Right(fromJson(response.data));
     } catch (error) {
+      _logger.severe('$method Error: $error');
       return Left(errorFromDioError(error));
     }
   }
