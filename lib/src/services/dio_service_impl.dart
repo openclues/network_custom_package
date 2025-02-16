@@ -23,6 +23,8 @@ class NetworkService implements HttpService {
     required String baseUrl,
     Future<String?> Function()? getToken,
   }) {
+    setupLogging();
+
     final dio = Dio(BaseOptions(baseUrl: baseUrl));
     if (getToken != null) {
       dio.interceptors.add(TokenInterceptor(getToken));
